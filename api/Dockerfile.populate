@@ -1,7 +1,12 @@
 FROM python:3.8.13
 
 # TODO - add all the necessary to run the script populate_db.py in this image
+WORKDIR /app
 # 1. Copy the requirements.txt file to the image
+COPY requirements.txt .
 # 2. Install the dependencies
+RUN pip install -r requirements.txt
 # 3. Copy the content of the current directory to the image
+COPY . .
 # 4. Run the populate_db.py script
+CMD ["python", "populate_db.py"]

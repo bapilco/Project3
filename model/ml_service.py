@@ -12,13 +12,13 @@ from tensorflow.keras.preprocessing import image
 # TODO
 # Connect to Redis and assign to variable `db``
 # Make use of settings.py module to get Redis settings like host, port, etc.
-db = None
+db = redis.Redis(host=settings.REDIS_IP, port=settings.REDIS_PORT, db=settings.REDIS_DB_ID)
 
 # TODO
 # Load your ML model and assign to variable `model`
 # See https://drive.google.com/file/d/1ADuBSE4z2ZVIdn66YDSwxKv-58U7WEOn/view?usp=sharing
 # for more information about how to use this model.
-model = None
+model = ResNet50(include_top=True, weights="imagenet")
 
 
 def predict(image_name):
@@ -43,12 +43,22 @@ def predict(image_name):
 
     # Load image
 
+    img = image.load_img(os.path.join(settings.UPLOAD_FOLDER, image_name), target_size=(224, 224))
+
     # Apply preprocessing (convert to numpy array, match model input dimensions (including batch) and use the resnet50 preprocessing)
 
+    x = image.img_to_array(img)
+    x_batch = np.expand_dims(x, axis=0)
+    x_batch = preprocess_input(x_batch)
+
     # Get predictions using model methods and decode predictions using resnet50 decode_predictions
-    _, class_name, pred_probability = None
+
+    predictions = model.predict(x_batch)
+    _, class_name, pred_probability = decode_predictions(predictions, top=5)[0][0]
 
     # Convert probabilities to float and round it
+
+    pred_probability = round(float(pred_probability), 4)
 
     return class_name, pred_probability
 
@@ -81,17 +91,27 @@ def classify_process():
         # TODO
         # Take a new job from Redis
 
+        job = db.brpop(settings.REDIS_QUEUE)
+
         # Decode the JSON data for the given job
+
+        job = json.loads(job.decode("utf-8"))
 
         # Important! Get and keep the original job ID
 
+        job_id = job["id"]
+
         # Run the loaded ml model (use the predict() function)
 
+        class_name, pred_probability = predict(job.get('image_name'))
+
         # Prepare a new JSON with the results
-        output = {"prediction": None, "score": None}
+        output = {"prediction": class_name, "score": pred_probability}
 
         # Store the job results on Redis using the original
         # job ID as the key
+
+        db.set(job_id, json.dumps(output))
 
         # Sleep for a bit
         time.sleep(settings.SERVER_SLEEP)
