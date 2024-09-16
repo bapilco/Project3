@@ -25,9 +25,31 @@ async def predict(file: UploadFile, current_user=Depends(get_current_user)):
     # If user sends an invalid request (e.g. no file provided) this endpoint
     # should return `rpse` dict with default values HTTP 400 Bad Request code
     # TODO
-    rpse["success"] = None
-    rpse["prediction"] = None
-    rpse["score"] = None
-    rpse["image_file_name"] = None
+
+    if not file:
+        return rpse
+
+    is_allowed = utils.allowed_file(file.filename)
+
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File type is not supported."
+        )
+
+    file_content = await file.read()
+    hash_file = await utils.get_file_hash(file)
+
+    file_path = os.path.join(config.UPLOAD_FOLDER, hash_file)
+    if not os.path.exists(file_path):
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+
+    prediction, score = await model_predict(file.filename)
+
+    rpse["success"] = True
+    rpse["prediction"] = prediction
+    rpse["score"] = score
+    rpse["image_file_name"] = hash_file
 
     return PredictResponse(**rpse)

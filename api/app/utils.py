@@ -55,13 +55,12 @@ async def get_file_hash(file):
 
     # Add original file extension
 
-    md5_hash = hashlib.md5()
+    file_content = await file.read()
 
-    for chunk in iter(lambda: file.read(4096), b""):
-        md5_hash.update(chunk)
+    file_hash = hashlib.md5(file_content).hexdigest()
 
     file.seek(0)
-    file_hash = md5_hash.hexdigest()
+
     _, file_extension = os.path.splitext(file.filename)
 
     return f"{file_hash}{file_extension}"
