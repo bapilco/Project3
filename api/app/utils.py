@@ -59,7 +59,7 @@ async def get_file_hash(file):
 
     file_hash = hashlib.md5(file_content).hexdigest()
 
-    file.seek(0)
+    await file.seek(0)
 
     _, file_extension = os.path.splitext(file.filename)
 

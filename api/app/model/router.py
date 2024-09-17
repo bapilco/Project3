@@ -37,15 +37,14 @@ async def predict(file: UploadFile, current_user=Depends(get_current_user)):
             detail="File type is not supported."
         )
 
-    file_content = await file.read()
     hash_file = await utils.get_file_hash(file)
 
     file_path = os.path.join(config.UPLOAD_FOLDER, hash_file)
     if not os.path.exists(file_path):
         with open(file_path, "wb") as f:
-            f.write(file_content)
+            f.write(await file.read())
 
-    prediction, score = await model_predict(file.filename)
+    prediction, score = await model_predict(hash_file)
 
     rpse["success"] = True
     rpse["prediction"] = prediction
