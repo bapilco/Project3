@@ -31,7 +31,31 @@ def login(username: str, password: str) -> Optional[str]:
     #  7. Return the token if login is successful, otherwise return `None`.
     #  8. Test the function with various inputs.
 
-    return None
+    endpoint = API_BASE_URL + '/login'
+
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
+    form_data = {
+        "grant_type": "",
+        "username": username,
+        "password": password,
+        "scope": "",
+        "client_id": "",
+        "client_secret": ""
+    }
+
+    try:
+        response = requests.post(endpoint, headers=headers, data=form_data)
+        if response.status_code == 200:
+            json_response = response.json()
+            return json_response.get("access_token")
+        return None
+    except requests.RequestException as e:
+        return None
+
 
 
 def predict(token: str, uploaded_file: Image) -> requests.Response:
@@ -52,9 +76,24 @@ def predict(token: str, uploaded_file: Image) -> requests.Response:
     #  2. Add the token to the headers.
     #  3. Make a POST request to the predict endpoint.
     #  4. Return the response.
-    response = None
 
-    return response
+    endpoint = API_BASE_URL + '/model/predict'
+
+    files={
+        "file": (uploaded_file.name, uploaded_file.getvalue())
+    }
+
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+
+    try:
+        response = requests.post(endpoint, headers=headers, files=files)
+        return response
+
+    except requests.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
 
 
 def send_feedback(

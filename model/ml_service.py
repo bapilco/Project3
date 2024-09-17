@@ -95,7 +95,9 @@ def classify_process():
 
         # Decode the JSON data for the given job
 
-        job = json.loads(job.decode("utf-8"))
+        job_data = job[1]
+        job_data_str = job_data.decode("utf-8")
+        job = json.loads(job_data_str)
 
         # Important! Get and keep the original job ID
 
@@ -103,7 +105,7 @@ def classify_process():
 
         # Run the loaded ml model (use the predict() function)
 
-        class_name, pred_probability = predict(job.get('image_name'))
+        class_name, pred_probability = predict(job['image_name'])
 
         # Prepare a new JSON with the results
         output = {"prediction": class_name, "score": pred_probability}
