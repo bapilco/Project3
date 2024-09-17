@@ -119,9 +119,27 @@ def send_feedback(
     # 2. Add the token to the headers.
     # 3. Make a POST request to the feedback endpoint.
     # 4. Return the response.
-    response = None
 
-    return response
+    endpoint = API_BASE_URL + '/feedback'
+
+    headers = {
+        'Authorization': f'Bearer {token}'
+    }
+
+    json={
+        "feedback": feedback,
+        "score": score,
+        "predicted_class": prediction,
+        "image_file_name": image_file_name,
+    }
+
+    try:
+        response = requests.post(endpoint, headers=headers, json=json)
+        return response
+
+    except requests.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
 
 
 # Interfaz de usuario
